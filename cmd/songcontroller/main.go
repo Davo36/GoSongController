@@ -8,6 +8,7 @@ import (
 
 	"github.com/gobuffalo/packr"
 	"github.com/gorilla/mux"
+	"github.com/itchyny/volume-go"
 )
 
 func main() {
@@ -20,16 +21,20 @@ func main() {
 
 	// UI handlers.
 	router.HandleFunc("/", songcontroller.IndexHandler).Methods("GET")
+	router.HandleFunc("/volumeup", songcontroller.VolumeUpHandler).Methods("GET")
+	router.HandleFunc("/volumedown", songcontroller.VolumeDownHandler).Methods("GET")
+	router.HandleFunc("/mute", songcontroller.MuteHandler).Methods("GET")
+	router.HandleFunc("/unmute", songcontroller.UnMuteHandler).Methods("GET")
 
 	listenAddr := fmt.Sprintf(":%d", 80)
 	log.Printf("listening on %s", listenAddr)
 	log.Fatal(http.ListenAndServe(listenAddr, router))
 
-	// vol, err := volume.GetVolume()
-	// if err != nil {
-	// 	log.Fatalf("get volume failed: %+v", err)
-	// }
-	// fmt.Printf("current volume: %d\n", vol)
+	vol, err := volume.GetVolume()
+	if err != nil {
+		log.Fatalf("get volume failed: %+v", err)
+	}
+	fmt.Printf("current volume: %d\n", vol)
 
 	// err = volume.SetVolume(10)
 	// if err != nil {

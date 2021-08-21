@@ -1,18 +1,100 @@
 <!doctype html>
 
 <html lang="en">
+
 <head>
-    <title>Song Volume Controller</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="/static/css/bootstrap.min.css">
+  <title>Song Volume Controller</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/static/css/bootstrap.min.css">
+  <style>
+    .row div {
+      display: flex;
+      justify-content: center;
+    }
+
+    .btn-block {
+      max-width: 400px;
+    }
+  </style>
 </head>
 
 <body>
-  <h1>Oi!</h1>
+
+
+
+  <div class="container">
+
+
+    <div class="row">
+      <div class="col-xs-12 w-100">
+        <h1 class="ml-2" id="currentVolume">Volume: {{.Volume}}</h1>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-xs-12 w-100">
+        <a class="btn btn-primary btn-block mt-3" onclick="volumeUp()" role="button">Up</a>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-12 w-100">
+        <a class="btn btn-primary btn-block mt-3" onclick="volumeDown()" role="button">Down</a>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-12 w-100">
+        <a class="btn btn-primary btn-block mt-3" onclick="mute()" role="button">Mute</a>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-12 w-100">
+        <a class="btn btn-primary btn-block mt-3" onclick="unMute()" role="button">Unmute</a>
+      </div>
+    </div>
+  </div>
+
+
+
+
+  </div>
 
   <script src="/static/js/jquery-3.6.0.min.js"></script>
   <script src="/static/js/bootstrap.min.js"></script>
+
+  <script>
+
+    function volumeUp() {
+      fetch(
+        "/volumeup", { method: "GET" }
+      );
+      location.reload();
+    }
+
+
+    function volumeDown() {
+      fetch(
+        "/volumedown", { method: "GET" }
+      );
+      location.reload();
+    }
+
+    function mute() {
+      fetch(
+        "/mute", { method: "GET" }
+      );
+      location.reload();
+    }
+
+    function unMute() {
+      fetch(
+        "/unmute", { method: "GET" }
+      );
+      location.reload();
+    }
+
+
+  </script>
 
 </body>
 
