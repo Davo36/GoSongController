@@ -25,12 +25,19 @@
 
   <div class="container">
 
+    <!-- <label for="customRange1" class="form-label">Volume</label>
+    <input type="range" class="form-range" min="0" max="100" step = "5" id="customRange1"> -->
 
-    <div class="row">
-      <div class="col-xs-12 w-100">
-        <h1 class="ml-2" id="currentVolume">Volume: {{.Volume}}</h1>
+
+
+    <div class="d-flex justify-content-center my-4">
+      <label for="volumeSlider" class="form-label">Volume</label>
+      <div class="w-75">
+        <input type="range" class="form-range" min="0" max="100" step="5" id="volumeSlider" disabled>
       </div>
+      <span class="font-weight-bold text-primary ml-2 valueSpan"></span>
     </div>
+
 
     <div class="row">
       <div class="col-xs-12 w-100">
@@ -42,6 +49,8 @@
         <a class="btn btn-primary btn-block mt-3" onclick="volumeDown()" role="button">Down</a>
       </div>
     </div>
+
+
     <div class="row">
       <div class="col-xs-12 w-100">
         <a class="btn btn-primary btn-block mt-3" onclick="mute()" role="button">Mute</a>
@@ -52,7 +61,7 @@
         <a class="btn btn-primary btn-block mt-3" onclick="unMute()" role="button">Unmute</a>
       </div>
     </div>
-  </div>
+
 
 
 
@@ -64,34 +73,128 @@
 
   <script>
 
+    // Naughty global variable
+    var currentVolumeLevel = 0;
+
+
     function volumeUp() {
-      fetch(
-        "/volumeup", { method: "GET" }
-      );
-      location.reload();
+      console.log("In volumeUp currentVolumeLevel is " + currentVolumeLevel.toString())
+      currentVolumeLevel += 10;
+      if (currentVolumeLevel > 100) {
+        console.log("In volumeUp further down... currentVolumeLevel is " + currentVolumeLevel.toString())
+        currentVolumeLevel = 100;
+      }
+      setVolume(currentVolumeLevel.toString());
     }
 
 
     function volumeDown() {
-      fetch(
-        "/volumedown", { method: "GET" }
-      );
-      location.reload();
+      console.log("In volumeUp currentVolumeLevel is " + currentVolumeLevel.toString())
+      currentVolumeLevel -= 10;
+      if (currentVolumeLevel < 0) {
+        currentVolumeLevel = 0;
+      }
+      setVolume(currentVolumeLevel.toString());
     }
 
     function mute() {
       fetch(
         "/mute", { method: "GET" }
       );
-      location.reload();
     }
 
     function unMute() {
       fetch(
         "/unmute", { method: "GET" }
       );
-      location.reload();
     }
+
+    function updateSlider() {
+      // Get references to the controls we want to set on page load
+      const $sliderValue = $('.valueSpan');
+      const $slider = $('#volumeSlider');
+
+      // Set the slider to the correct position
+      console.log("Setting slider to " + currentVolumeLevel.toString());
+      $slider.val(currentVolumeLevel.toString());
+
+      // Set the number at the end of the slider to the volume level
+      $sliderValue.html(currentVolumeLevel.toString());
+
+    }
+
+    function setVolume(val) {
+      console.log("Setting volume to " + val)
+      fetch(
+        "/setvolume/" + val,
+        { method: "POST" }
+      ).then(function (response) {
+        return response.json();
+      }).then(function (json) {
+        var volumeLevel = json["volumelevel"];
+        var result = json["result"];
+        console.log(result)
+        if (result === "Success") {
+          console.log("Volume successfully set to " + volumeLevel)
+          updateSlider()
+        } else {
+          console.log("Server responded unable to set volume.")
+        }
+      });
+    };
+
+    function getVolume() {
+      console.log("Getting volume from server")
+      fetch(
+        "/getvolume",
+        { method: "GET" }
+      ).then(function (response) {
+        return response.json();
+      }).then(function (json) {
+        var volumeFromServer = json["volumelevel"];
+        var result = json["result"];
+
+        console.log("Volume from server is " + volumeFromServer)
+
+        if (result === "Success") {
+          currentVolumeLevel = Number(volumeFromServer);
+          console.log("Volume successfully retrieved " + volumeFromServer)
+          updateSlider()
+        } else {
+          console.log("Server responded unable to set volume.")
+        }
+
+      });
+    }
+
+
+    $(document).ready(function () {
+
+      // Get references to the controls we want to set on page load
+      const $sliderValue = $('.valueSpan');
+      const $slider = $('#volumeSlider');
+
+      // Call the server to get the current volume level
+      getVolume();
+
+
+      // $slider.on('input change', () => {
+
+      //   // Set the number at the end of the slider to the volume level
+      //   $sliderValue.html($slider.val());
+
+      // });
+
+      // $slider.mouseup(up);
+      // function up() {
+      //   // Set system volume on the server
+      //   console.log("here")
+      //   setVolume($slider.val())
+      // }
+
+
+
+    });
 
 
   </script>

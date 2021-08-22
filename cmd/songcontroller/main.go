@@ -8,7 +8,6 @@ import (
 
 	"github.com/gobuffalo/packr"
 	"github.com/gorilla/mux"
-	"github.com/itchyny/volume-go"
 )
 
 func main() {
@@ -21,35 +20,12 @@ func main() {
 
 	// UI handlers.
 	router.HandleFunc("/", songcontroller.IndexHandler).Methods("GET")
-	router.HandleFunc("/volumeup", songcontroller.VolumeUpHandler).Methods("GET")
-	router.HandleFunc("/volumedown", songcontroller.VolumeDownHandler).Methods("GET")
 	router.HandleFunc("/mute", songcontroller.MuteHandler).Methods("GET")
 	router.HandleFunc("/unmute", songcontroller.UnMuteHandler).Methods("GET")
+	router.HandleFunc("/getvolume", songcontroller.GetVolumeHandler).Methods("GET")
+	router.HandleFunc("/setvolume/{volumeLevel:[0-9]+}", songcontroller.SetVolumeHandler).Methods("POST")
 
 	listenAddr := fmt.Sprintf(":%d", 80)
 	log.Printf("listening on %s", listenAddr)
 	log.Fatal(http.ListenAndServe(listenAddr, router))
-
-	vol, err := volume.GetVolume()
-	if err != nil {
-		log.Fatalf("get volume failed: %+v", err)
-	}
-	fmt.Printf("current volume: %d\n", vol)
-
-	// err = volume.SetVolume(10)
-	// if err != nil {
-	// 	log.Fatalf("set volume failed: %+v", err)
-	// }
-	// fmt.Printf("set volume success\n")
-
-	// err = volume.Mute()
-	// if err != nil {
-	// 	log.Fatalf("mute failed: %+v", err)
-	// }
-
-	// err = volume.Unmute()
-	// if err != nil {
-	// 	log.Fatalf("unmute failed: %+v", err)
-	// }
-
 }

@@ -1,6 +1,7 @@
 package songcontroller
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -8,10 +9,9 @@ import (
 	"text/template"
 
 	"github.com/gobuffalo/packr"
+	"github.com/gorilla/mux"
 	"github.com/itchyny/volume-go"
 )
-
-var volumeIncrementDecrement = 10
 
 // Using a packr box means the html files are bundled up in the binary application.
 var templateBox = packr.NewBox("./html")
@@ -36,37 +36,8 @@ func init() {
 // IndexHandler is the root handler.
 func IndexHandler(w http.ResponseWriter, r *http.Request) {
 
-	type volumeResponse struct {
-		Volume       string
-		ErrorMessage string
-	}
+	tmpl.ExecuteTemplate(w, "index.html", nil)
 
-	currentVolume, err := volume.GetVolume()
-	errorMessage := ""
-	volumeStr := ""
-	if err != nil {
-		log.Printf("couldn't retrieve volume: %+v", err)
-		errorMessage = fmt.Sprint("Couldn't retrieve volume:", err)
-	} else {
-		volumeStr = strconv.Itoa(currentVolume)
-	}
-
-	resp := &volumeResponse{
-		Volume:       volumeStr,
-		ErrorMessage: errorMessage,
-	}
-
-	tmpl.ExecuteTemplate(w, "index.html", resp)
-}
-
-// VolumeUpHandler is called to raise the system volume.
-func VolumeUpHandler(w http.ResponseWriter, r *http.Request) {
-	volume.IncreaseVolume(volumeIncrementDecrement)
-}
-
-// VolumeDownHandler is called to lower the system volume.
-func VolumeDownHandler(w http.ResponseWriter, r *http.Request) {
-	volume.IncreaseVolume(-volumeIncrementDecrement)
 }
 
 // MuteHandler is called to mute the system audio.
@@ -77,4 +48,68 @@ func MuteHandler(w http.ResponseWriter, r *http.Request) {
 // VolumeDownHandler is called to unmute the system audio.
 func UnMuteHandler(w http.ResponseWriter, r *http.Request) {
 	volume.Unmute()
+}
+
+// GetVolumeHandler is called to return the system volume level.
+func GetVolumeHandler(w http.ResponseWriter, r *http.Request) {
+
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	response := make(map[string]string)
+
+	// Get current volume level
+	currentVolumeLevel, err := volume.GetVolume()
+
+	if err != nil {
+		log.Printf("couldn't retrieve volume level: %+v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		response["volumelevel"] = fmt.Sprint(50)
+		response["result"] = "Couldn't parse volume level."
+	} else {
+		w.WriteHeader(http.StatusOK)
+		response["volumelevel"] = fmt.Sprint(currentVolumeLevel)
+		response["result"] = "Success"
+		json.NewEncoder(w).Encode(response)
+	}
+
+}
+
+// SetVolumeHandler is called to set the system volume level to the value passed in.
+func SetVolumeHandler(w http.ResponseWriter, r *http.Request) {
+
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	response := make(map[string]string)
+
+	// Get current volume level
+	currentVolumeLevel, err := volume.GetVolume()
+
+	// Extract volumeLevel argument passed in.
+	volumeLevelStr := mux.Vars(r)["volumeLevel"]
+	volumeLevel, err2 := strconv.Atoi(volumeLevelStr)
+	if err != nil || err2 != nil {
+		log.Printf("couldn't parse volume level: %+v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		response["volumelevel"] = fmt.Sprint(currentVolumeLevel)
+		response["result"] = "Couldn't parse volume level."
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	if volumeLevel < 0 {
+		volumeLevel = 0
+	}
+	if volumeLevel > 100 {
+		volumeLevel = 100
+	}
+	err = volume.SetVolume(volumeLevel)
+	if err != nil {
+		// SetVolume was not successful
+		response["volumelevel"] = fmt.Sprint(currentVolumeLevel)
+		response["result"] = "Couldn't set volume level."
+	} else {
+		w.WriteHeader(http.StatusOK)
+		response["volumelevel"] = fmt.Sprint(volumeLevel)
+		response["result"] = "Success"
+	}
+	json.NewEncoder(w).Encode(response)
+
 }
